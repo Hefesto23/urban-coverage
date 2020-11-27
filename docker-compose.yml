@@ -1,0 +1,52 @@
+version: '3.1'
+
+services:
+  app:
+    container_name: urban-api
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # container_name: urban-api_main
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    command: ['sh', 'scripts/start-api.sh']
+    networks:
+      - urban-api_network
+    depends_on:
+      - redis
+      - mongo
+
+  redis:
+    container_name: urban-api_redis
+    image: redis
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    networks:
+      - urban-api_network
+    volumes:
+      - redis-data:/data
+    entrypoint: redis-server --appendonly yes
+    restart: always
+
+  mongo:
+    container_name: urban-api_mongo
+    image: mongo
+    restart: always
+    networks:
+      - urban-api_network
+    volumes:
+      - mongo-data:/data
+    ports:
+      - ${MONGO_PORT}:${MONGO_PORT}
+
+networks:
+  urban-api_network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  mongo-data:
+    driver: local
